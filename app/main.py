@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from fastapi import FastAPI, Response, Request, Cookie, HTTPException, status, Depends
+from fastapi import FastAPI, Response, Request, Cookie, HTTPException, status, Depends, Form
 
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -15,40 +15,6 @@ import requests
 import configparser
 
 
-def read_config_url(filepath="config.ini"):
-    if not os.path.exists(filepath):
-        return None
-
-    config = configparser.ConfigParser()
-    config.read(filepath)
-    return config
-
-
-def load_oui_file(filepath):
-    data = {}
-
-    f = open(filepath, "r")
-    source = f.read().splitlines()
-
-    # Parse it
-    for l in source:
-        key, value = l.split("\t")
-        data[key.upper()] = value
-    return data
-
-def lookup_oui_key(data, key):
-    if key.upper() not in data.keys():
-        return None
-
-    return data[key.upper()]
-
-def lookup_oui_mac(data, mac):
-    n_mac = mac
-    n_mac = n_mac.replace(':', '') # Unix, Linux, BSD, Apple
-    n_mac = n_mac.replace('-', '') # Windows
-    n_mac = n_mac.replace('.', '') # Cisco
-    n_mac = n_mac[0:6] # To OUI
-    return lookup_oui_key(data, n_mac)
 
 
 # MAIN
@@ -79,28 +45,21 @@ async def read_items(request: Request):
                                          "boodschappen": boodschappen})
 
 
-@app.get("/api/oui-lookup/oui")
-async def lookup_oui(key: str):
-    decode_key = urllib.parse.unquote(key)
-    v = lookup_oui_key(data, decode_key)
-    if v is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+@app.post("/boodschappen")
+async def boodschappen(barcode: str = Form(),
+                       boodschappen_direct: str = Form()):
+    print(barcode, boodschappen_direct)
 
-    r = {}
-    r['value'] = v
-    return r
+#
+#        # Generate a session, returns a session key to validate per call
+#    session_key = authnz.generate_session_key(authlevel)
+#
+#    # Set the session key
+#    response.set_cookie(key="sessionkey",  value=session_key)
+#
+#
+#    print(
 
-
-@app.get("/api/oui-lookup/mac")
-async def lookup_mac(key: str):
-    decode_key = urllib.parse.unquote(key)
-    v = lookup_oui_mac(data, decode_key)
-    if v is None:
-        raise HTTPException(status_code=404, detail="Item not found")
-
-    r = {}
-    r['value'] = v
-    return r
 
 
 @app.post("/api/oui-lookup/update")
