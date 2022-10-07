@@ -1,29 +1,33 @@
-<html>
-<head>
-    <title>Boodschappen</title>
-    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
-</head>
-<body>
-    <h1>Boodschappen - Bleeper</h1>
-    <form action="/boodschappen" method="post">
-        <label for="barcode">Scan barcode:</label>
-        <input type="text" id="barcode" name="barcode" value autofocus="on"><br><br>
+{% extends 'base.html' %}
 
-        <input type="radio" id="add" name="boodschappen_direct" value="add" checked>
-        <label for="add">Toevoegen aan lijst</label><br>
-        <input type="radio" id="css" name="boodschappen_direct" value="remove">
-        <label for="remove">Verwijder van lijst</label><br>
-        <input type="radio" id="javascript" name="boodschappen_direct" value="view">
-        <label for="view">Opzoeken</label>
+{% block content %}
+<form action="/boodschappen" method="post">
+    <label for="barcode">Scan barcode:</label>
+    <input type="text" id="barcode" name="barcode" value autofocus="on"><br><br>
 
-        <br>
-        <input type="submit" value="Submit">
-    </form>
-    <br><br>
+    <input type="radio" id="add" name="boodschappen_direct" value="add" checked>
+    <label for="add">Toevoegen aan lijst</label><br>
+    <input type="radio" id="css" name="boodschappen_direct" value="remove">
+    <label for="remove">Verwijder van lijst</label><br>
+    <input type="radio" id="javascript" name="boodschappen_direct" value="view">
+    <label for="view">Opzoeken</label>
 
-    <h1>Boodschappenlijst</h1>
+    <br>
+    <input type="submit" value="Submit">
+</form>
 
-    <h1>Item ID: {{ id }}</h1>
-</body>
-</html>
-
+<br>
+<h2>Boodschappen</h2>
+<div>
+    {% for boodschap in boodschappen %}
+        <div class="boodschap">
+            {{ boodschap.aantal }}<br>
+            {{ boodschap.omschrijving }}<br>
+            <small>
+                <a href="edit/{{ boodschap.id }}">Edit</a>
+                <a href="delete/{{ boodschap.id }}">Delete</a>
+            </small>
+        </div>
+    {% endfor %}
+</div>
+{% endblock content %}

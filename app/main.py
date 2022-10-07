@@ -3,9 +3,13 @@
 
 from fastapi import FastAPI, Response, Request, Cookie, HTTPException, status, Depends, Form
 
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+import models
+from database import engine, sessionlocal
+from sqlalchemy.orm import Session
 
 from starlette import status
 import os
@@ -15,21 +19,27 @@ import requests
 import configparser
 
 
+models.Base.metadata.create_all(bind=engine)
+app = FastAPI()
+
+
+def get_db():
+    db = sessionlocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 # MAIN
-data = {}
 
-boodschappen = []
 
 
 # Load FastAPI
 app = FastAPI()
 
 
-
 app.mount("/static", StaticFiles(directory="/code/app/static"), name="static")
-
 templates = Jinja2Templates(directory="/code/app/templates")
 
 
@@ -39,19 +49,41 @@ async def read_item(request: Request, id: str):
 
 
 @app.get("/", response_class=HTMLResponse)
-async def read_items(request: Request):
+async def home(request: Request, db: Session = Depends(get_db)):
+    boodschappen = db.query(models.Boodschap).order_by(models.Boodschap.id.desc())
+
     return templates.TemplateResponse("index.html",
                                         {"request": request,
                                          "boodschappen": boodschappen})
 
 
-@app.post("/boodschappen")
-async def boodschappen(barcode: str = Form(),
+@app.post("/boodschappen", response_class=RedirectResponse, status_code=302)
+async def boodschappen(response: Response, barcode: str = Form(),
                        boodschappen_direct: str = Form()):
+
+    # Doe lookup, wel bestaan:
+    #                   is +1 bij toevoegen. Of -1 bij verwijderen.
+    #             niet bestaan:
+    #                   redirect naar invoer veld
+
+
+#async def add(request: Request, task: str = Form(...), db: Session = Depends(get_db)):
+#    todo = models.Todo(task=task)
+#    db.add(todo)
+#    db.commit()
+#    return RedirectResponse(url=app.url_path_for("home"), status
+#
+#
     print(barcode, boodschappen_direct)
 
-#
-#        # Generate a session, returns a session key to validate per call
+    response.set_cookie(key="boodschappen_direct", value=boodschappen_direct)
+
+    return "/"
+
+
+
+
+#    # Generate a session, returns a session key to validate per call
 #    session_key = authnz.generate_session_key(authlevel)
 #
 #    # Set the session key
