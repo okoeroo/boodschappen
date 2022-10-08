@@ -21,8 +21,9 @@
 <div>
     {% for boodschap in boodschappen %}
         <div class="boodschap">
-            {{ boodschap.aantal }}<br>
-            {{ boodschap.omschrijving }}<br>
+            <b>{{ boodschap.aantal }}</b>
+            <b>{{ boodschap.omschrijving }}</b>
+            {{ boodschap.barcode }}
             <small>
                 <a href="edit/{{ boodschap.id }}">Edit</a>
                 <a href="delete/{{ boodschap.id }}">Delete</a>

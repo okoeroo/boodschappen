@@ -32,7 +32,19 @@ def get_db():
 
 
 # MAIN
+def test():
+    boodschap = models.Boodschap()
+    boodschap.barcode = "baaarrrrr"
+    boodschap.omschrijving = 'boo'
+    boodschap.aantal = 1
 
+    print(boodschap)
+
+    db = sessionlocal()
+    db.add(boodschap)
+    db.commit()
+
+test()
 
 
 # Load FastAPI
@@ -59,7 +71,28 @@ async def home(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/boodschappen", response_class=RedirectResponse, status_code=302)
 async def boodschappen(response: Response, barcode: str = Form(),
-                       boodschappen_direct: str = Form()):
+                       boodschappen_direct: str = Form(),
+                       db: Session = Depends(get_db)):
+
+    print("post data:", barcode, boodschappen_direct)
+
+    boodschap = db.query(models.Boodschap).filter(models.Boodschap.barcode == barcode).first()
+    if not boodschap:
+        boodschap = models.Boodschap()
+        boodschap.barcode = barcode
+        boodschap.aantal = 1
+
+        db.add(boodschap)
+        db.commit()
+    else:
+        boodschap.aantal = boodschap.aantal + 1
+        db.commit()
+
+
+    print("lookup:", boodschap)
+
+#    return templates.TemplateResponse("edit.html", {"request": request, "todo": todo})
+
 
     # Doe lookup, wel bestaan:
     #                   is +1 bij toevoegen. Of -1 bij verwijderen.
@@ -74,7 +107,6 @@ async def boodschappen(response: Response, barcode: str = Form(),
 #    return RedirectResponse(url=app.url_path_for("home"), status
 #
 #
-    print(barcode, boodschappen_direct)
 
     response.set_cookie(key="boodschappen_direct", value=boodschappen_direct)
 

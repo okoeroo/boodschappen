@@ -6,6 +6,7 @@ from database import Base
 class Boodschap(Base):
     __tablename__ = 'boodschappen'
     id = Column(Integer, primary_key=True)
+    barcode = Column(Text)
     omschrijving = Column(Text)
     aantal = Column(Integer)
 
