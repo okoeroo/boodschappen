@@ -159,12 +159,15 @@ async def boodschappen_edit_id(request: Request,
     if boodschap.prijs is None:
         boodschap.prijs = ""
 
+    if boodschap.aantal is None:
+        boodschap.aantal = ""
 
     return templates.TemplateResponse("edit.html", {"request": request,
                                                        "id": boodschap.id, 
                                                        "barcode": boodschap.barcode,
                                                        "omschrijving": boodschap.omschrijving,
-                                                       "prijs": boodschap.prijs})
+                                                       "prijs": boodschap.prijs,
+                                                       "aantal": boodschap.aantal})
 
 
 @app.post("/boodschappen/edit", response_class=RedirectResponse, status_code=302)
@@ -172,6 +175,7 @@ async def boodschappen_edit(response: Response,
                             barcode: str = Form(),
                             omschrijving: str = Form(None),
                             prijs: str = Form(None),
+                            aantal: str = Form(None),
                             db: Session = Depends(get_db)):
 
     boodschap = db.query(models.Boodschap).filter(models.Boodschap.barcode == barcode).first()
@@ -180,7 +184,7 @@ async def boodschappen_edit(response: Response,
         boodschap.barcode = barcode
         boodschap.omschrijving = omschrijving
         boodschap.prijs = prijs
-        boodschap.aantal = 1
+        boodschap.aantal = aantal
 
         db.add(boodschap)
         db.commit()
@@ -189,7 +193,7 @@ async def boodschappen_edit(response: Response,
         boodschap.barcode = barcode
         boodschap.omschrijving = omschrijving
         boodschap.prijs = prijs
-        boodschap.aantal = 1
+        boodschap.aantal = aantal
 
         db.commit()
 

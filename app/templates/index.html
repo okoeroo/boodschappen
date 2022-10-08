@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<head>
+    <meta http-equiv="refresh" content="60; URL=/">
+</head>
+
     <form action="/boodschappen" method="post">
         <label for="barcode">Scan barcode:</label>
         <input type="text" id="barcode" name="barcode" value autofocus="on"><br>
