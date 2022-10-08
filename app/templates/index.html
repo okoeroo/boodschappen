@@ -3,13 +3,18 @@
 {% block content %}
 <form action="/boodschappen" method="post">
     <label for="barcode">Scan barcode:</label>
-    <input type="text" id="barcode" name="barcode" value autofocus="on"><br><br>
+    <input type="text" id="barcode" name="barcode" value autofocus="on"><br>
+    <label for="omschrijving">Omschrijving:</label>
+    <input type="text" id="omschrijving" name="omschrijving" value><br>
+    <label for="prijs">Prijs:</label>
+    <input type="text" id="prijs" name="prijs" value><br>
+    <br>
 
-    <input type="radio" id="add" name="boodschappen_direct" value="add" checked>
+    <input type="radio" id="add" name="boodschappen_direct" value="add" {{ boodschappen_direct_add }}>
     <label for="add">Toevoegen aan lijst</label><br>
-    <input type="radio" id="css" name="boodschappen_direct" value="remove">
+    <input type="radio" id="remove" name="boodschappen_direct" value="remove" {{ boodschappen_direct_remove }}>
     <label for="remove">Verwijder van lijst</label><br>
-    <input type="radio" id="javascript" name="boodschappen_direct" value="view">
+    <input type="radio" id="view" name="boodschappen_direct" value="view" {{ boodschappen_direct_view }}>
     <label for="view">Opzoeken</label>
 
     <br>

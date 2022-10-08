@@ -1,6 +1,6 @@
 # models.py
 
-from sqlalchemy import Column, Integer, Boolean, Text
+from sqlalchemy import Column, Integer, Boolean, Text, Numeric
 from database import Base
 
 class Boodschap(Base):
@@ -8,7 +8,8 @@ class Boodschap(Base):
     id = Column(Integer, primary_key=True)
     barcode = Column(Text)
     omschrijving = Column(Text)
+    prijs = Column(Numeric)
     aantal = Column(Integer)
 
     def __repr__(self):
-        return '<Boodschap %r>' % (self.id)
+        return f"<Boodschap::{self.barcode}>"

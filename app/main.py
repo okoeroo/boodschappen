@@ -19,6 +19,8 @@ import requests
 import configparser
 
 
+os.remove('/data/boodschappen.sqlite3')
+
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
@@ -34,8 +36,10 @@ def get_db():
 # MAIN
 def test():
     boodschap = models.Boodschap()
+
     boodschap.barcode = "baaarrrrr"
     boodschap.omschrijving = 'boo'
+    boodschap.prijs = 0.10
     boodschap.aantal = 1
 
     print(boodschap)
@@ -44,6 +48,7 @@ def test():
     db.add(boodschap)
     db.commit()
 
+##### TEST
 test()
 
 
@@ -61,18 +66,47 @@ async def read_item(request: Request, id: str):
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request, db: Session = Depends(get_db)):
+async def home(request: Request,
+                db: Session = Depends(get_db), 
+                boodschappen_direct: str | None = Cookie(default=None)):
+
+    boodschappen_direct_add = \
+        boodschappen_direct_remove = \
+        boodschappen_direct_view = ""
+
+    if boodschappen_direct is None or \
+            boodschappen_direct == "add":
+        boodschappen_direct_add = "checked"
+    elif boodschappen_direct == "remove":
+        boodschappen_direct_remove = "checked"
+    elif boodschappen_direct == "view":
+        boodschappen_direct_view = "checked"
+    else:
+        # Hacker detected
+        boodschappen_direct_add = "checked"
+
+
     boodschappen = db.query(models.Boodschap).order_by(models.Boodschap.id.desc())
 
+    # Display home
     return templates.TemplateResponse("index.html",
                                         {"request": request,
-                                         "boodschappen": boodschappen})
+                                         "boodschappen": boodschappen,
+                                         "boodschappen_direct_add": boodschappen_direct_add,
+                                         "boodschappen_direct_remove": boodschappen_direct_remove,
+                                         "boodschappen_direct_view": boodschappen_direct_view})
+
 
 
 @app.post("/boodschappen", response_class=RedirectResponse, status_code=302)
 async def boodschappen(response: Response, barcode: str = Form(),
                        boodschappen_direct: str = Form(),
                        db: Session = Depends(get_db)):
+
+    # Doe lookup, wel bestaan:
+    #                   is +1 bij toevoegen. Of -1 bij verwijderen.
+    #             niet bestaan:
+    #                   redirect naar invoer veld
 
     print("post data:", barcode, boodschappen_direct)
 
@@ -85,19 +119,29 @@ async def boodschappen(response: Response, barcode: str = Form(),
         db.add(boodschap)
         db.commit()
     else:
-        boodschap.aantal = boodschap.aantal + 1
-        db.commit()
+        if boodschappen_direct == "add":
+            boodschap.aantal = boodschap.aantal + 1
+            db.commit()
+        elif boodschappen_direct == "remove":
+            if boodschap.aantal != 0:
+                boodschap.aantal = boodschap.aantal - 1
+                db.commit()
+            else:
+                print("Warning: blocked going below 0")
+        else:
+            print("Unsupported")
 
 
     print("lookup:", boodschap)
 
+    response.set_cookie(key="boodschappen_direct", value=boodschappen_direct)
+    return "/"
+
+
+
 #    return templates.TemplateResponse("edit.html", {"request": request, "todo": todo})
 
 
-    # Doe lookup, wel bestaan:
-    #                   is +1 bij toevoegen. Of -1 bij verwijderen.
-    #             niet bestaan:
-    #                   redirect naar invoer veld
 
 
 #async def add(request: Request, task: str = Form(...), db: Session = Depends(get_db)):
@@ -107,49 +151,3 @@ async def boodschappen(response: Response, barcode: str = Form(),
 #    return RedirectResponse(url=app.url_path_for("home"), status
 #
 #
-
-    response.set_cookie(key="boodschappen_direct", value=boodschappen_direct)
-
-    return "/"
-
-
-
-
-#    # Generate a session, returns a session key to validate per call
-#    session_key = authnz.generate_session_key(authlevel)
-#
-#    # Set the session key
-#    response.set_cookie(key="sessionkey",  value=session_key)
-#
-#
-#    print(
-
-
-
-@app.post("/api/oui-lookup/update")
-async def update_oui_file():
-    print("Using settings:")
-    print(config['settings']['oui_url'])
-    print(config['settings']['oui_file'])
-
-    print("Downloading...")
-    response = requests.get(config['settings']['oui_url'])
-    if response.status_code < 200 or response.status_code > 299:
-        raise HTTPException(status_code=500, detail="Error in OUI updating.")
-        print("Error: downloading.")
-        return
-
-    print("Done downloading.")
-
-    print("Writing...")
-    open(config['settings']['oui_file'], "wb").write(response.content)
-    print("Done writing to disk")
-
-    print("Reloading OUI file from disk...")
-    data = load_oui_file(config['settings']['oui_file'])
-    print("Done reloading in memory.")
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-
-
