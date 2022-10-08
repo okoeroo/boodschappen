@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from fastapi import FastAPI, Response, Request, Cookie, HTTPException, status, Depends, Form
+from fastapi import FastAPI, Response, Request, Cookie, HTTPException, status, Depends, Form, UploadFile, File
 
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -17,9 +17,11 @@ import sys
 import urllib.parse
 import requests
 import configparser
+import csv
+from io import StringIO
 
 
-os.remove('/data/boodschappen.sqlite3')
+# os.remove('/data/boodschappen.sqlite3')
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -194,16 +196,46 @@ async def boodschappen_edit(response: Response,
     return "/"
 
 
+@app.get("/boodschappen/delete/{id}", response_class=RedirectResponse, status_code=302)
+async def boodschappen_edit_id(request: Request,
+                                response: Response,
+                                id: str,
+                                db: Session = Depends(get_db)):
+    boodschap = db.query(models.Boodschap).filter(models.Boodschap.id == id).first()
 
-#    return templates.TemplateResponse("edit.html", {"request": request, "todo": todo})
+    db.delete(boodschap)
+    db.commit()
+
+    return "/"
 
 
+@app.post("/boodschappen/upload_csv", response_class=RedirectResponse, status_code=302)
+async def boodschappen_edit_id(request: Request,
+                                response: Response,
+                                upload_csv_file: UploadFile = File(...),
+                                db: Session = Depends(get_db)):
+
+    content_csv_file = await upload_csv_file.read()
+    print(content_csv_file)
+
+    buffer = StringIO(content_csv_file.decode('utf-8'))
+    csvReader = csv.DictReader(buffer)
+    for row in csvReader:  
+
+        print("Barcode:", row['barcode'])
+        boodschap = db.query(models.Boodschap).filter(models.Boodschap.barcode == row['barcode']).first()
+        if not boodschap:
+            boodschap = models.Boodschap()
+            boodschap.barcode = row['barcode']
+            boodschap.omschrijving = row['omschrijving']
+#            boodschap.prijs = prijs
+            boodschap.aantal = row['aantal']
+
+            db.add(boodschap)
+            db.commit()
+
+    buffer.close()
+
+    return "/"
 
 
-#async def add(request: Request, task: str = Form(...), db: Session = Depends(get_db)):
-#    todo = models.Todo(task=task)
-#    db.add(todo)
-#    db.commit()
-#    return RedirectResponse(url=app.url_path_for("home"), status
-#
-#
