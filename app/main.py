@@ -120,7 +120,7 @@ async def boodschappen(response: Response, barcode: str = Form(),
         db.commit()
 
         print("id is:", boodschap.id)
-        return f"/boodschappen/add/{boodschap.id}"
+        return f"/boodschappen/edit/{boodschap.id}"
 
     else:
         if boodschappen_direct == "add":
@@ -141,11 +141,11 @@ async def boodschappen(response: Response, barcode: str = Form(),
     return "/"
 
 
-@app.get("/boodschappen/add/{id}", response_class=HTMLResponse)
-async def boodschappen_add(request: Request,
-                            response: Response,
-                            id: str,
-                            db: Session = Depends(get_db)):
+@app.get("/boodschappen/edit/{id}", response_class=HTMLResponse)
+async def boodschappen_edit_id(request: Request,
+                                response: Response,
+                                id: str,
+                                db: Session = Depends(get_db)):
     boodschap = db.query(models.Boodschap).filter(models.Boodschap.id == id).first()
 
     if boodschap.barcode is None:
@@ -158,38 +158,39 @@ async def boodschappen_add(request: Request,
         boodschap.prijs = ""
 
 
-    return templates.TemplateResponse("add.html", {"request": request,
-                                                   "id": boodschap.id, 
-                                                   "barcode": boodschap.barcode,
-                                                   "omschrijving": boodschap.omschrijving,
-                                                   "prijs": boodschap.prijs})
+    return templates.TemplateResponse("edit.html", {"request": request,
+                                                       "id": boodschap.id, 
+                                                       "barcode": boodschap.barcode,
+                                                       "omschrijving": boodschap.omschrijving,
+                                                       "prijs": boodschap.prijs})
 
+
+@app.post("/boodschappen/edit", response_class=RedirectResponse, status_code=302)
+async def boodschappen_edit(response: Response,
+                            barcode: str = Form(),
+                            omschrijving: str = Form(None),
+                            prijs: str = Form(None),
+                            db: Session = Depends(get_db)):
 
     boodschap = db.query(models.Boodschap).filter(models.Boodschap.barcode == barcode).first()
     if not boodschap:
         boodschap = models.Boodschap()
         boodschap.barcode = barcode
+        boodschap.omschrijving = omschrijving
+        boodschap.prijs = prijs
         boodschap.aantal = 1
 
         db.add(boodschap)
         db.commit()
+
     else:
-        if boodschappen_direct == "add":
-            boodschap.aantal = boodschap.aantal + 1
-            db.commit()
-        elif boodschappen_direct == "remove":
-            if boodschap.aantal != 0:
-                boodschap.aantal = boodschap.aantal - 1
-                db.commit()
-            else:
-                print("Warning: blocked going below 0")
-        else:
-            print("Unsupported")
+        boodschap.barcode = barcode
+        boodschap.omschrijving = omschrijving
+        boodschap.prijs = prijs
+        boodschap.aantal = 1
 
+        db.commit()
 
-    print("lookup:", boodschap)
-
-    response.set_cookie(key="boodschappen_direct", value=boodschappen_direct)
     return "/"
 
 
