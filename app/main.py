@@ -49,7 +49,7 @@ def test():
     db.commit()
 
 ##### TEST
-test()
+# test()
 
 
 # Load FastAPI
@@ -109,6 +109,61 @@ async def boodschappen(response: Response, barcode: str = Form(),
     #                   redirect naar invoer veld
 
     print("post data:", barcode, boodschappen_direct)
+
+    boodschap = db.query(models.Boodschap).filter(models.Boodschap.barcode == barcode).first()
+    if not boodschap:
+        boodschap = models.Boodschap()
+        boodschap.barcode = barcode
+        boodschap.aantal = 1
+
+        db.add(boodschap)
+        db.commit()
+
+        print("id is:", boodschap.id)
+        return f"/boodschappen/add/{boodschap.id}"
+
+    else:
+        if boodschappen_direct == "add":
+            boodschap.aantal = boodschap.aantal + 1
+            db.commit()
+        elif boodschappen_direct == "remove":
+            if boodschap.aantal != 0:
+                boodschap.aantal = boodschap.aantal - 1
+                db.commit()
+            else:
+                print("Warning: blocked going below 0")
+        else:
+            print("Unsupported")
+
+    print("lookup:", boodschap)
+
+    response.set_cookie(key="boodschappen_direct", value=boodschappen_direct)
+    return "/"
+
+
+@app.get("/boodschappen/add/{id}", response_class=HTMLResponse)
+async def boodschappen_add(request: Request,
+                            response: Response,
+                            id: str,
+                            db: Session = Depends(get_db)):
+    boodschap = db.query(models.Boodschap).filter(models.Boodschap.id == id).first()
+
+    if boodschap.barcode is None:
+        boodschap.barcode = ""
+
+    if boodschap.omschrijving is None:
+        boodschap.omschrijving = ""
+
+    if boodschap.prijs is None:
+        boodschap.prijs = ""
+
+
+    return templates.TemplateResponse("add.html", {"request": request,
+                                                   "id": boodschap.id, 
+                                                   "barcode": boodschap.barcode,
+                                                   "omschrijving": boodschap.omschrijving,
+                                                   "prijs": boodschap.prijs})
+
 
     boodschap = db.query(models.Boodschap).filter(models.Boodschap.barcode == barcode).first()
     if not boodschap:

@@ -8,7 +8,7 @@ class Boodschap(Base):
     id = Column(Integer, primary_key=True)
     barcode = Column(Text)
     omschrijving = Column(Text)
-    prijs = Column(Numeric)
+    prijs = Column(Text)
     aantal = Column(Integer)
 
     def __repr__(self):
