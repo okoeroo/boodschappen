@@ -24,18 +24,31 @@
     <br>
     <h2>Boodschappen</h2>
     <div>
-        {% for boodschap in boodschappen %}
-            <div class="boodschap">
-                <b>{{ boodschap.aantal }}</b>
-                <b>{{ boodschap.omschrijving }}</b>
-                <b>{{ boodschap.prijs}}</b>
-                {{ boodschap.barcode }}
-                <small>
-                    <a href="/boodschappen/edit/{{ boodschap.id }}">Edit</a>
-<!--                    <a href="/boodschappen/delete/{{ boodschap.id }}">Delete</a>    -->
-                </small>
-            </div>
-        {% endfor %}
+        <table id="boodschappen">
+            <tr>
+                <th>Aantal</th>
+                <th>Product</th>
+                <th>Prijs</th>
+                <th>Barcode</th>
+                <th>Functies</th>
+            </tr>
+
+            {% for boodschap in boodschappen %}
+            <tr>
+                <td><b>{{ boodschap.aantal }}</b></td>
+                <td><b>{{ boodschap.omschrijving }}</b></td>
+                <td><b>{{ boodschap.prijs}}</b></td>
+                <td>{{ boodschap.barcode }}</td>
+                <td>
+                    <small>
+                        <a href="/boodschappen/edit/{{ boodschap.id }}">Edit</a>
+        <!--                <a href="/boodschappen/delete/{{ boodschap.id }}">Delete</a>    -->
+                    </small>
+                </td>
+            </tr>
+            {% endfor %}
+
+        </table>
     </div>
 
     <br>
